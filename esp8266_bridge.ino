@@ -4,11 +4,11 @@
 #include <WiFiClientSecure.h>
 
 
-const char* WIFI_SSID = "Abishek";
-const char* WIFI_PASS = "abishek1";
+const char* WIFI_SSID = "wifi name";
+const char* WIFI_PASS = "password";
 
-const char* BOT_TOKEN = "8613065987:AAFFmHL_THF0MjapZwJxim1SPYy7lF68ovU";
-const char* CHAT_ID   = "1760201128";
+const char* BOT_TOKEN = "bot token, create it in the telegram";
+const char* CHAT_ID   = "your chat id";
 
 // Using Hardware Serial (TX/RX pins) for Pico communication at 9600 baud.
 // Remember to unplug Pico when uploading code via USB!
