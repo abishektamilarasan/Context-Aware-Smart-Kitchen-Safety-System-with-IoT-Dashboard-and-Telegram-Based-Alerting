@@ -22,7 +22,7 @@ void sendTelegram(String message) {
     client.setInsecure();
 
     HTTPClient http;
-    http.setTimeout(5000);  // 5 second timeout so it doesn't hang forever
+    http.setTimeout(5000);  
 
     String url = "https://api.telegram.org/bot" + String(BOT_TOKEN) + "/sendMessage";
 
@@ -62,7 +62,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     }
 }
 
-// -------------------- SETUP --------------------
+//  SETUP
 void setup() {
     Serial.begin(9600);
     delay(10);
@@ -90,7 +90,7 @@ void setup() {
     webSocket.onEvent(webSocketEvent);
 }
 
-// -------------------- LOOP --------------------
+//  LOOP
 void loop() {
     webSocket.loop();
 
