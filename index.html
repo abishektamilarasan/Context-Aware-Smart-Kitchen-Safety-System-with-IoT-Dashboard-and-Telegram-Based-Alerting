@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart Kitchen Automation System Dashboard">
+    <title>Smart Kitchen Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header id="header">
+            <div class="header-content">
+                <div class="logo"><span class="logo-icon">🍳</span><h1>Smart Kitchen</h1></div>
+                <div class="header-right">
+                    <div class="ip-setup">
+                        <input type="text" id="espIp" placeholder="e.g. 192.168.1.10" class="ip-input">
+                        <button onclick="startConnection()" class="connect-btn">Connect</button>
+                    </div>
+                    <div class="conn-status" id="connStatus">
+                        <span class="status-dot disconnected"></span>
+                        <span id="connText">Offline</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="sensor-grid">
+            <div class="card" id="tempCard">
+                <div class="card-icon">🌡️</div>
+                <div class="card-label">Temperature</div>
+                <div class="card-value" id="tempVal">--</div>
+                <div class="card-unit">°C</div>
+                <div class="bar"><div class="bar-fill" id="tempBar"></div></div>
+            </div>
+            <div class="card" id="humCard">
+                <div class="card-icon">💧</div>
+                <div class="card-label">Humidity</div>
+                <div class="card-value" id="humVal">--</div>
+                <div class="card-unit">%</div>
+                <div class="bar"><div class="bar-fill" id="humBar"></div></div>
+            </div>
+            <div class="card" id="gasCard">
+                <div class="card-icon">💨</div>
+                <div class="card-label">Gas Level</div>
+                <div class="card-value" id="gasVal">--</div>
+                <div class="card-unit">PPM</div>
+                <div class="bar"><div class="bar-fill" id="gasBar"></div></div>
+            </div>
+            <div class="card" id="flameCard">
+                <div class="card-icon">🔥</div>
+                <div class="card-label">Flame</div>
+                <div class="card-value" id="flameVal">Safe</div>
+                <div class="status-indicator safe" id="flameDot"></div>
+            </div>
+            <div class="card" id="motionCard">
+                <div class="card-icon">👁️</div>
+                <div class="card-label">Motion</div>
+                <div class="card-value" id="motionVal">None</div>
+                <div class="status-indicator" id="motionDot"></div>
+            </div>
+        </section>
+
+        <section class="actuator-section">
+            <h2 class="section-title">Actuator Status</h2>
+            <div class="actuator-grid">
+                <div class="actuator" id="fanAct">
+                    <span class="act-icon">🌀</span>
+                    <span class="act-name">Exhaust Fan</span>
+                    <span class="act-state off" id="fanState">OFF</span>
+                </div>
+                <div class="actuator" id="buzAct">
+                    <span class="act-icon">🔔</span>
+                    <span class="act-name">Buzzer</span>
+                    <span class="act-state off" id="buzState">OFF</span>
+                </div>
+                <div class="actuator" id="vlvAct" onclick="toggleValveManually()" style="cursor: pointer;" title="Click to manually open/close valve">
+                    <span class="act-icon">🔧</span>
+                    <span class="act-name">Gas Valve</span>
+                    <span class="act-state off" id="vlvState">CLOSED</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="controls-section">
+            <h2 class="section-title">Controls</h2>
+            <div class="controls-grid">
+                <div class="ctrl-group">
+                    <label for="gasThreshIn">Gas Threshold (PPM)</label>
+                    <div class="ctrl-row">
+                        <input type="number" id="gasThreshIn" placeholder="6000" min="0" max="10000">
+                        <button id="gasThreshBtn" onclick="sendCmd('SET_GAS_THRESH',document.getElementById('gasThreshIn').value)">Set</button>
+                    </div>
+                </div>
+                <div class="ctrl-group">
+                    <label for="tempThreshIn">Temp Threshold (°C)</label>
+                    <div class="ctrl-row">
+                        <input type="number" id="tempThreshIn" placeholder="50" min="0" max="100">
+                        <button id="tempThreshBtn" onclick="sendCmd('SET_TEMP_THRESH',document.getElementById('tempThreshIn').value)">Set</button>
+                    </div>
+                </div>
+                <div class="ctrl-group timer-group">
+                    <label for="timerIn">Cooking Timer (min)</label>
+                    <div class="ctrl-row">
+                        <input type="number" id="timerIn" placeholder="Minutes" min="1" max="180">
+                        <button id="timerBtn" onclick="startTimer()">Start</button>
+                        <button id="timerCancelBtn" onclick="cancelTimer()" style="background:var(--danger)">Cancel</button>
+                    </div>
+                    <div class="timer-display" id="timerDisp">00:00</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="alert-section">
+            <h2 class="section-title">Alert Log</h2>
+            <div class="alert-log" id="alertLog">
+                <div class="alert-entry info">
+                    <span class="alert-time">--:--</span>
+                    <span>Waiting for connection…</span>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
