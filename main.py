@@ -1,6 +1,6 @@
 import machine, dht, time, json
 
-# -------------------- PIN CONFIG --------------------
+
 DHT_PIN     = 15
 GAS_PIN     = 26        # ADC0
 FLAME_PIN   = 14
@@ -14,7 +14,7 @@ MOTION_LED  = 18        # Green LED — ON when motion detected
 UART_TX     = 8
 UART_RX     = 9
 
-# -------------------- INIT PERIPHERALS --------------------
+#  INIT PERIPHERALS 
 dht_s   = dht.DHT11(machine.Pin(DHT_PIN))
 gas_adc = machine.ADC(machine.Pin(GAS_PIN))
 flame_p = machine.Pin(FLAME_PIN, machine.Pin.IN)
@@ -31,7 +31,7 @@ uart    = machine.UART(0, baudrate=9600,
                        rx=machine.Pin(UART_RX),
                        timeout=50)
 
-# -------------------- STATE --------------------
+#  STATE
 temp = 0.0
 hum  = 0.0              # humidity %
 gas  = 0
@@ -67,7 +67,7 @@ INTERVAL   = 1000
 alert_blink_ms = 0      # for blinking the alert LED
 pending_alert  = ""     # stores alert until sent to ESP
 
-# -------------------- HELPERS --------------------
+#  HELPERS 
 def servo_angle(a):
     """Move servo to angle 'a' (0-180). Uses standard SG90 pulse widths."""
     # SG90 at 50Hz: 0.5ms=0°, 1.5ms=90°, 2.5ms=180°
@@ -215,7 +215,7 @@ def send_data(al=""):
     })
     uart.write(d + "\n")
 
-# -------------------- MAIN --------------------
+#  MAIN 
 # Boot-up servo test: sweep so user can verify hardware
 print("Smart Kitchen System Starting...")
 print("Testing servo...")
