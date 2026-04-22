@@ -1,29 +1,76 @@
-**🚀 Turning the Heart of the Home into a Smart, Safe Haven! 🍳🔥**
+# Smart Kitchen Monitoring System 🍳🔒
 
-I’m thrilled to share the latest IoT project I developed a **Comprehensive Smart Kitchen Automation System**. 
+A complete, dual-microcontroller smart kitchen safety and telemetry system. This project uses a **Raspberry Pi Pico** to execute hard real-time safety logic (sensor polling, thermal shutdown, gas leak detection) and an **ESP8266** acting as a Wi-Fi bridge to serve a sleek, interactive Web Dashboard.
 
-Kitchens are notorious for safety hazards—gas leaks, forgotten stovetops, and unattended flames. We wanted to build a localized, robust system that not only monitors the kitchen environment in real-time but *acts* autonomously to prevent disasters. 
+## ✨ Features
+* **Live Telemetry Dashboard:** Real-time updates for Gas (PPM), Temperature (°C), Humidity (%), Flame Detection, and Motion Detection.
+* **Intelligent Auto-Release Overrides:** Full manual authority over the Fan, Buzzer, and LEDs from the web interface. Once an active crisis (like a gas leak) clears, the system dynamically drops the manual locks and reverts to automated protection mode.
+* **Thermal & Gas Lockdown:** If temperature exceeds the threshold or gas levels spike, the system aggressively locks down by forcing a Servo to shut off the physical gas valve, blasting the siren, and spinning up the exhaust fan.
+* **DHT11 Integration:** Native support for the digital DHT11 sensor for stable ambient kitchen temperature and humidity tracking.
+* **Hardware Panic Button:** A physical push-button to override lockdowns natively.
 
-Here’s a deep dive into how we built it and how it works:
+---
 
-### 🧠 Dual-Microcontroller Architecture
-To ensure rock-solid performance, we split the processing responsibilities:
-🔹 **Raspberry Pi Pico (The Brains):** Handles all the core, non-blocking hardware logic. It reads sensor data, manages safety timeout loops, and locally triggers hardware interventions without relying on internet connectivity.
-🔹 **ESP8266 NodeMCU (The Network Bridge):** Acts as a dedicated WiFi-to-UART bridge. It handles all WebSocket traffic, serves data to the local dashboard, and manages outbound API calls. 
+## 🔌 Hardware Wiring Guide
 
-### ⚙️ Core Workflow & Safety Features
-1️⃣ **Real-Time Sensor Fusion:** The system continuously monitors temperature & humidity (DHT11), combustible gases & smoke (MQ2), and localized motion (PIR).
-2️⃣ **Interactive Web Dashboard:** A sleek, responsive web interface presents live telemetry data, allows users to set dynamic temperature/gas thresholds, and provides manual override buttons for the kitchen hardware (like exhaust fans).
-3️⃣ **Automated Gas Shut-Off:** If the MQ2 sensor detects a gas leak or flame, the Pico instantly triggers a Servo Motor to physically rotate and shut off the gas regulator—stopping the problem at the source.
-4️⃣ **Smart Cooking Timer & 10-Min Rule:** Started a pot on the stove and forgot about it? A built-in cooking timer can auto-shutoff the gas when time is up. Additionally, if the stove is on but the PIR sensor detects no motion for 10 minutes (unattended stove), the system safely shuts down automatically.
-5️⃣ **Child Protection Mode:** When armed via the dashboard, any motion detected by the PIR sensor triggers a loud local buzzer alarm, deterring kids from a hot stovetop.
+### 1. Raspberry Pi Pico (The Core Brain)
+This board handles all physical hardware interactions and mathematical safety triggers. Ensure you wire these exactly as specified in the updated `main.py`:
 
-### 📱 Instant Telegram Alerts
-Because you aren't always looking at a dashboard, critical events shouldn't go unnoticed. The ESP8266 instantly pushes alerts directly to our phones via a **Telegram Bot** if:
-🚨 Gas levels exceed safe thresholds.
-🚨 A flame is detected.
-🚨 The stove was left unattended and auto-triggered a safety shutdown.
+| Component | Pico Pin | Type / Notes |
+| :--- | :--- | :--- |
+| **DHT11 Temp/Hum Sensor** | `GP15` | Digital Input (Data pin) |
+| **MQ2 Gas Sensor** | `GP26` (ADC0) | Analog Input |
+| **Flame Sensor** | `GP14` | Digital Input |
+| **PIR Motion Sensor** | `GP13` | Digital Input |
+| **Physical Button** | `GP16` | Digital Input (Pull-Up) |
+| **Alarm Buzzer** | `GP12` | Digital Output |
+| **Exhaust Fan Relay** | `GP11` | Digital Output |
+| **Servo Motor (Valve)**| `GP10` | PWM Output (50Hz) |
+| **Alert LED (Red)** | `GP17` | Digital Output |
+| **Motion LED (Green)** | `GP18` | Digital Output |
+| **UART TX (To ESP8266)**| `GP8`  | Connects to ESP8266 `RX` pin |
+| **UART RX (From ESP8266)**| `GP9`  | Connects to ESP8266 `TX` pin |
 
-**🛠 Tech Stack:** C++ / Arduino IDE, MicroPython, HTML/CSS/JS (Vanilla WebSockets), Telegram API.
+> **⚠️ CRITICAL:** You **must** connect a Ground (GND) pin from the Raspberry Pi Pico to a Ground (GND) pin on the ESP8266 so they share a common electrical reference line!
 
-Building this pushed our team to handle complex asynchronous communication (UART), real-time web bridging, and physical hardware actuations (servo kinematics). The peace of mind knowing the kitchen can handle its own emergencies? Priceless. 🧠💡
+### 2. ESP8266 NodeMCU (The Wi-Fi Bridge)
+This board solely acts as a wireless HTTP server. It blindly bridges the web dashboard JSON commands to the Pi Pico via a high-speed UART hardware serial line.
+
+* **RX Pin:** Connect to Pico `GP8`
+* **TX Pin:** Connect to Pico `GP9`
+* **GND:** Connect to Pico `GND`
+
+---
+
+## 🚀 Installation & Setup
+
+### Step 1: Program the Raspberry Pi Pico
+1. Install **MicroPython** onto your Raspberry Pi Pico.
+2. Open Thonny IDE.
+3. Upload `main.py` to the root directory of the Pico.
+4. The Pico will automatically begin running the hardware loops and parsing the DHT11 data!
+
+### Step 2: Program the ESP8266
+1. Open the Arduino IDE.
+2. Open `esp8266_bridge.ino`.
+3. Change the Wi-Fi configuration lines at the top of the file to match your home network:
+   ```cpp
+   const char* ssid = "YOUR_WIFI_SSID";
+   const char* password = "YOUR_WIFI_PASSWORD";
+   ```
+4. Flash the code to the ESP8266.
+5. Open the Arduino Serial Monitor (115200 baud). Once connected to your Wi-Fi, it will print an IP address (e.g., `192.168.1.50`). Save this IP address!
+
+### Step 3: Launch the Dashboard
+1. Simply double-click the `index.html` file on your computer or host it on a local lightweight web server.
+2. At the top right of the beautiful dark-mode interface, enter the **ESP8266 IP Address** you got from Step 2 into the connection bar.
+3. Click **Connect**.
+4. The dot will turn glowing green, and your live kitchen telemetry (including your new DHT11 Temp and Humidity) will instantly spring to life!
+
+---
+
+## 🛠️ Built With
+* **MicroPython** (Raspberry Pi Pico Logic)
+* **C++ / Arduino Core** (ESP8266 Web Server)
+* **Vanilla HTML/CSS/JS** (Dashboard UI)
+* **Lucide Icons** (Premium SVG Icons)
