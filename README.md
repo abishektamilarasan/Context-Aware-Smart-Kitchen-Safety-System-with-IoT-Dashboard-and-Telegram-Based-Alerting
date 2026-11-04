@@ -1,76 +1,197 @@
-# Smart Kitchen Monitoring System 🍳🔒
+# Context-Aware Smart Kitchen Safety System with IoT Dashboard & Telegram-Based Alerting 🍳🔒
 
-A complete, dual-microcontroller smart kitchen safety and telemetry system. This project uses a **Raspberry Pi Pico** to execute hard real-time safety logic (sensor polling, thermal shutdown, gas leak detection) and an **ESP8266** acting as a Wi-Fi bridge to serve a sleek, interactive Web Dashboard.
-
-## ✨ Features
-* **Live Telemetry Dashboard:** Real-time updates for Gas (PPM), Temperature (°C), Humidity (%), Flame Detection, and Motion Detection.
-* **Intelligent Auto-Release Overrides:** Full manual authority over the Fan, Buzzer, and LEDs from the web interface. Once an active crisis (like a gas leak) clears, the system dynamically drops the manual locks and reverts to automated protection mode.
-* **Thermal & Gas Lockdown:** If temperature exceeds the threshold or gas levels spike, the system aggressively locks down by forcing a Servo to shut off the physical gas valve, blasting the siren, and spinning up the exhaust fan.
-* **DHT11 Integration:** Native support for the digital DHT11 sensor for stable ambient kitchen temperature and humidity tracking.
-* **Hardware Panic Button:** A physical push-button to override lockdowns natively.
+An intelligent, context-aware dual-microcontroller smart kitchen safety and real-time monitoring system. This project integrates a **Raspberry Pi Pico** (handling hard real-time safety logic, sensor polling, thermal shutdown, and automated valve control) and an **ESP8266 NodeMCU** (Wi-Fi WebSocket bridge & Telegram bot notifications) serving a responsive **Dark-Mode IoT Web Dashboard**.
 
 ---
 
-## 🔌 Hardware Wiring Guide
+## 📸 Project Demonstration & Media
 
-### 1. Raspberry Pi Pico (The Core Brain)
-This board handles all physical hardware interactions and mathematical safety triggers. Ensure you wire these exactly as specified in the updated `main.py`:
+### 🎥 Working Demo Video
+Watch the full project walkthrough and hardware demonstration in action:
 
-| Component | Pico Pin | Type / Notes |
+▶️ **[Watch Project Demo Video on Google Drive](https://drive.google.com/file/d/1Uai0teUW1F0Ts2fL-v9hLNXnDiluZxP6/view?usp=sharing)**  
+*(Folder archive: [Google Drive Project Media](https://drive.google.com/drive/folders/1ytq5GDOAmccYYJ0MjeMIaaZal2vd0l3z?usp=drive_link))*
+
+---
+
+### 📷 Hardware Setup & Working Prototype
+
+| System Prototype in Action | Hardware Top View & Sensor Placement |
+| :---: | :---: |
+| ![Complete System Setup](assets/images/system_setup.jpg) | ![Hardware Top View](assets/images/hardware_top_view.jpg) |
+| *Raspberry Pi Pico + ESP8266 connected with sensors and live Web Dashboard* | *Top-down layout of DHT11, MQ-2, Flame Sensor, PIR, Servo, Fan Relay, and Buzzer* |
+
+---
+
+### 💻 IoT Web Dashboard & Telegram Alerts
+
+| Real-Time IoT Web Dashboard | Instant Telegram Safety Bot Notifications |
+| :---: | :---: |
+| ![IoT Web Dashboard](assets/images/iot_dashboard.jpg) | ![Telegram Bot Alerts](assets/images/telegram_alerts.jpg) |
+| *Live telemetry: Temperature, Humidity, Gas (PPM), Flame status, Motion, and manual control overrides* | *Instant real-time mobile push notifications for gas leaks, flame triggers, and unattended stove warnings* |
+
+---
+
+## ✨ Key Features
+
+* **Context-Aware Safety Interventions:** Distinguishes between normal cooking activity and hazard conditions (e.g. unattended stove, persistent gas leaks, or fire breakouts).
+* **Live Telemetry Dashboard:** WebSocket-based real-time telemetry streaming:
+  * Ambient Temperature (°C) & Relative Humidity (%) via DHT11
+  * LPG / Smoke / Gas Concentration (PPM) via MQ-2
+  * Flame Detection (Safe / Active Fire alert)
+  * Kitchen Occupancy & Motion tracking via PIR sensor
+* **Automated Physical Valve Lockdown:** Servo motor automatically rotates to physically cut off the gas supply line when a hazard threshold is breached.
+* **Instant Emergency Actuation:** Automated exhaust fan relay activation and piezo siren alerts during critical states.
+* **Telegram Bot Push Alerts:** Emergency notifications dispatched directly to user smartphones via Telegram Bot API with low latency.
+* **Intelligent Auto-Release Overrides:** Manual control over the fan, buzzer, and servo via the dashboard, with auto-release reverting to automated safety mode once hazards clear.
+* **Hardware Panic Override:** Physical push-button mechanism on the breadboard to silence alerts and reset the system locally.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Sensors["Kitchen Environment Sensors"]
+        DHT["DHT11 (Temp & Humidity)"]
+        MQ2["MQ-2 Gas / Smoke Sensor"]
+        FLAME["Infrared Flame Sensor"]
+        PIR["PIR Motion Sensor"]
+        BTN["Physical Override Button"]
+    end
+
+    subgraph Controller["Real-Time Controller"]
+        PICO["Raspberry Pi Pico (MicroPython)\n- Hard Real-Time Hazard Detection\n- Safety Logic & Threshold Evaluation\n- Actuator Lockdown Controller"]
+    end
+
+    subgraph Actuators["Safety Actuators"]
+        SERVO["Servo Motor (Gas Valve Shutoff)"]
+        RELAY["Relay Module (Exhaust Fan)"]
+        BUZZ["Buzzer Alarm / Siren"]
+        LEDS["Status & Motion LEDs"]
+    end
+
+    subgraph Bridge["Wireless Communication Bridge"]
+        ESP["ESP8266 NodeMCU (Arduino C++)\n- High-Speed UART with Pico (9600 baud)\n- WebSocket Server (Port 81)\n- HTTPS Client for Telegram Bot API"]
+    end
+
+    subgraph Interfaces["User & Cloud Interfaces"]
+        DASH["Responsive Web Dashboard\n(HTML5 / CSS3 / JavaScript)"]
+        TG["Telegram Mobile App\n(Instant Push Notifications)"]
+    end
+
+    Sensors -->|Digital / ADC Signals| PICO
+    PICO -->|PWM & GPIO Triggers| Actuators
+    PICO <==>|Bi-directional UART Serial| ESP
+    ESP <==>|WebSockets| DASH
+    ESP -->|HTTPS POST| TG
+```
+
+---
+
+## 🔌 Hardware Wiring & Pin Mapping
+
+### 1. Raspberry Pi Pico (Primary Controller)
+
+| Component | Pico Pin | Type / Function |
 | :--- | :--- | :--- |
-| **DHT11 Temp/Hum Sensor** | `GP15` | Digital Input (Data pin) |
-| **MQ2 Gas Sensor** | `GP26` (ADC0) | Analog Input |
-| **Flame Sensor** | `GP14` | Digital Input |
+| **DHT11 Temp & Humidity Sensor** | `GP15` | Digital Input (1-Wire Data) |
+| **MQ-2 Gas Sensor (Analog)** | `GP26` (ADC0) | 12-bit ADC Input |
+| **Flame Detection Sensor** | `GP14` | Digital Input (Active Low / Interrupt) |
 | **PIR Motion Sensor** | `GP13` | Digital Input |
-| **Physical Button** | `GP16` | Digital Input (Pull-Up) |
-| **Alarm Buzzer** | `GP12` | Digital Output |
+| **Hardware Panic Push Button** | `GP16` | Digital Input (Internal Pull-Up) |
+| **Piezo Buzzer / Alarm** | `GP12` | Digital Output |
 | **Exhaust Fan Relay** | `GP11` | Digital Output |
-| **Servo Motor (Valve)**| `GP10` | PWM Output (50Hz) |
-| **Alert LED (Red)** | `GP17` | Digital Output |
-| **Motion LED (Green)** | `GP18` | Digital Output |
-| **UART TX (To ESP8266)**| `GP8`  | Connects to ESP8266 `RX` pin |
-| **UART RX (From ESP8266)**| `GP9`  | Connects to ESP8266 `TX` pin |
+| **Servo Motor (Gas Valve)** | `GP10` | PWM Output (50 Hz) |
+| **Hazard Alert LED (Red)** | `GP17` | Digital Output |
+| **Occupancy LED (Green)** | `GP18` | Digital Output |
+| **UART TX (to ESP8266 RX)** | `GP8` | Hardware UART0 TX |
+| **UART RX (from ESP8266 TX)**| `GP9` | Hardware UART0 RX |
 
-> **⚠️ CRITICAL:** You **must** connect a Ground (GND) pin from the Raspberry Pi Pico to a Ground (GND) pin on the ESP8266 so they share a common electrical reference line!
-
-### 2. ESP8266 NodeMCU (The Wi-Fi Bridge)
-This board solely acts as a wireless HTTP server. It blindly bridges the web dashboard JSON commands to the Pi Pico via a high-speed UART hardware serial line.
-
-* **RX Pin:** Connect to Pico `GP8`
-* **TX Pin:** Connect to Pico `GP9`
-* **GND:** Connect to Pico `GND`
+> **⚠️ Common Ground Requirement:** Always bridge a `GND` pin from the Raspberry Pi Pico to a `GND` pin on the ESP8266 to maintain a unified logic reference.
 
 ---
 
-## 🚀 Installation & Setup
+### 2. ESP8266 NodeMCU (Wi-Fi & Cloud Gateway)
 
-### Step 1: Program the Raspberry Pi Pico
-1. Install **MicroPython** onto your Raspberry Pi Pico.
-2. Open Thonny IDE.
-3. Upload `main.py` to the root directory of the Pico.
-4. The Pico will automatically begin running the hardware loops and parsing the DHT11 data!
+| Component / Function | ESP8266 Pin | Notes |
+| :--- | :--- | :--- |
+| **UART RX** | `RX` | Connects to Pico `GP8` (Pico TX) |
+| **UART TX** | `TX` | Connects to Pico `GP9` (Pico RX) |
+| **Common GND** | `GND` | Shared with Raspberry Pi Pico GND |
+| **Power Supply** | `Vin / 5V` & `GND` | 5V external rail or USB power |
 
-### Step 2: Program the ESP8266
-1. Open the Arduino IDE.
-2. Open `esp8266_bridge.ino`.
-3. Change the Wi-Fi configuration lines at the top of the file to match your home network:
+---
+
+## 📂 Repository Structure
+
+```
+├── assets/
+│   └── images/
+│       ├── system_setup.jpg        # Complete hardware prototype + live dashboard
+│       ├── hardware_top_view.jpg   # Top-view breadboard & sensor wiring layout
+│       ├── iot_dashboard.jpg       # Dark-mode telemetry Web UI screenshot
+│       └── telegram_alerts.jpg     # Telegram bot alert message feed
+├── main.py                         # MicroPython runtime & safety control loop for Pi Pico
+├── esp8266_bridge.ino              # Arduino C++ sketch for ESP8266 (WebSocket + Telegram)
+├── index.html                      # Real-time IoT monitoring dashboard UI
+├── app.js                          # WebSocket client & dynamic dashboard state management
+├── styles.css                      # Modern glassmorphism dark-mode UI styling
+└── README.md                       # Complete documentation & wiring guide
+```
+
+---
+
+## 🚀 Quickstart Guide
+
+### 1. Flash the Raspberry Pi Pico
+1. Flash the latest **MicroPython** firmware onto your Raspberry Pi Pico.
+2. Open **Thonny IDE** and set the interpreter to *MicroPython (Raspberry Pi Pico)*.
+3. Save [`main.py`](main.py) to the root of the Pico.
+4. The Pico will initialize GPIO pins, calibrate the gas sensor baseline, and begin polling telemetry.
+
+### 2. Configure & Flash the ESP8266
+1. Install the ESP8266 board definitions in the **Arduino IDE**.
+2. Install required libraries:
+   * `WebSockets` by Markus Sattler
+   * `ESP8266WiFi` & `ESP8266HTTPClient` (bundled with ESP8266 core)
+3. Open [`esp8266_bridge.ino`](esp8266_bridge.ino) and update your Wi-Fi credentials and Telegram Bot configurations:
    ```cpp
-   const char* ssid = "YOUR_WIFI_SSID";
-   const char* password = "YOUR_WIFI_PASSWORD";
-   ```
-4. Flash the code to the ESP8266.
-5. Open the Arduino Serial Monitor (115200 baud). Once connected to your Wi-Fi, it will print an IP address (e.g., `192.168.1.50`). Save this IP address!
+   const char* WIFI_SSID = "YOUR_WIFI_SSID";
+   const char* WIFI_PASS = "YOUR_WIFI_PASSWORD";
 
-### Step 3: Launch the Dashboard
-1. Simply double-click the `index.html` file on your computer or host it on a local lightweight web server.
-2. At the top right of the beautiful dark-mode interface, enter the **ESP8266 IP Address** you got from Step 2 into the connection bar.
-3. Click **Connect**.
-4. The dot will turn glowing green, and your live kitchen telemetry (including your new DHT11 Temp and Humidity) will instantly spring to life!
+   const char* BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN";
+   const char* CHAT_ID   = "YOUR_TELEGRAM_CHAT_ID";
+   ```
+4. Flash the code to the ESP8266 (*disconnect TX/RX wires temporarily during upload if sharing the serial port*).
+5. Open the Serial Monitor at **9600 baud** to note the assigned local IP address (e.g. `192.168.1.100`).
+
+### 3. Launch the Web Dashboard
+1. Open [`index.html`](index.html) in any modern browser.
+2. Enter the ESP8266's IP address in the connection bar at the top right.
+3. Click **Connect**. The indicator dot will turn green, streaming live kitchen metrics and safety states.
+
+---
+
+## 📱 Telegram Alert Triggers
+
+The system automatically dispatches the following alerts via the Telegram Bot:
+* `[ALERT] Gas level exceeded threshold!` — Triggered when MQ-2 gas concentration crosses preset safety limit.
+* `[ALERT] Flame detected! Gas valve closed!` — Immediate critical alert upon optical IR flame trigger.
+* `[ALERT] Stove unattended for 10 min - system shut down!` — Context-aware timer alert if no movement is observed near an active heat/flame zone.
 
 ---
 
 ## 🛠️ Built With
-* **MicroPython** (Raspberry Pi Pico Logic)
-* **C++ / Arduino Core** (ESP8266 Web Server)
-* **Vanilla HTML/CSS/JS** (Dashboard UI)
-* **Lucide Icons** (Premium SVG Icons)
+
+* **Hardware & Firmware:**
+  * [MicroPython](https://micropython.org/) — Real-time sensor sampling & actuator logic on Raspberry Pi Pico
+  * [Arduino C++](https://www.arduino.cc/) — ESP8266 Wi-Fi networking, WebSocket server, and HTTPS client
+* **Frontend Web Application:**
+  * Modern HTML5, CSS3 (Glassmorphism design, CSS Grid/Flexbox)
+  * JavaScript (ES6+ WebSockets & dynamic DOM updates)
+  * [Lucide Icons](https://lucide.dev/) — Vector UI iconography
+* **Cloud & Communication:**
+  * [Telegram Bot API](https://core.telegram.org/bots/api) — Secure, real-time mobile push alerting
+  * WebSocket Protocol (RFC 6455) — Low-latency bidirectional browser-to-hardware communication
+
